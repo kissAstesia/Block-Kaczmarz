@@ -13,7 +13,18 @@ J = row_partition(A,t);  %得到块索引
 
 num_block = size(J,1);
 
-iter = 0;              %迭代次数
+
+
+lamda_of_block = zeros(num_block,1);
+
+for l = 1 : num_block
+    [~ , lamda] = submatrix_handle(A(J{l},:),b(J{l}),x_0);
+    lamda_of_block(l) = lamda;
+end
+
+max_lamda_of_block = max(lamda_of_block);          %提前得到lamda_max_block
+
+iter = 0;                                          %迭代次数
 
 %开始迭代，每次迭代会遍历一次所有的块，因此需要生成一个随机排列，大小为块的数量
 
@@ -25,9 +36,13 @@ iter = 0;              %迭代次数
             rows_used = J{perm(j)};
             A_J = A(rows_used,:);             %选取子矩阵
             b_j = b(rows_used);
-            sum = submatrix_handle(A_J,b_j,x_0);
+            [sum,~] = submatrix_handle(A_J,b_j,x_0);
+
+
     
-            alpha_k = 2;                        %%%在这里改变步长
+            alpha_k = 2*t/max_lamda_of_block;                        %%%在这里改变步长
+
+            
     
             %进行迭代
             x_0 = x_0 - alpha_k * sum;
